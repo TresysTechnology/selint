@@ -117,6 +117,8 @@ SEVERITY LEVELS
 	significance of the issue.  Available levels are listed below in increasing
 	order of significance.
 
+	X (extra) - Miscellaneous checks, mainly for policy introspection.
+	These must be explicitly enabled with their individual identifier.
 	C (convention) - A violation of common style conventions
 	S (style) - Stylistic "code smell" that may be associated with unintended
 	behavior
@@ -151,6 +153,8 @@ OUTPUT
 CHECK IDS
 
 	The following checks may be performed:
+
+	X-001: Unused interface or template declaration
 
 	C-001: Violation of refpolicy te file ordering conventions
 	C-004: Interface does not have documentation comment

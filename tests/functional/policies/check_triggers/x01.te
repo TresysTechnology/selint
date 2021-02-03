@@ -1,0 +1,5 @@
+policy_module(x01, 0.1)
+
+type foo_t;
+
+used_if(foo_t)

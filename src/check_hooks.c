@@ -146,6 +146,9 @@ int is_valid_check(const char *check_str)
 	char severity = check_str[0];
 
 	switch (severity) {
+	case 'X':
+		max_id = X_END - 1;
+		break;
 	case 'C':
 		max_id = C_END - 1;
 		break;
@@ -189,11 +192,22 @@ static unsigned int count_check_nodes(const struct checks *ck)
 	return count;
 }
 
-#define COMPARE_IDS(node1_id, node2_id)\
-if (node1_id == node2_id) {\
-	return 0;\
-} else {\
-	return (node1_id > node2_id?1:-1);\
+static int id_priority(char id)
+{
+	switch (id) {
+	case 'X':
+		return 0;
+	case 'C':
+		return 1;
+	case 'S':
+		return 2;
+	case 'W':
+		return 3;
+	case 'E':
+		return 4;
+	default:
+		return 5; //Should never happen, but no way to return an error
+	}
 }
 
 // Return negative if n1 goes before n2, positive if n1 goes after n2 or equal if they are equivalent
@@ -202,41 +216,18 @@ static int comp_check_nodes(const void *n1, const void *n2)
 	const struct check_node *node1 = *(const struct check_node *const *)n1;
 	const struct check_node *node2 = *(const struct check_node *const *)n2;
 
+	int check1_priority = id_priority(node1->check_id[0]);
+	int check2_priority = id_priority(node2->check_id[0]);
+
+	int r = (check1_priority > check2_priority) - (check1_priority < check2_priority);
+	if (r != 0) {
+		return r;
+	}
+
 	int node1_id = atoi(node1->check_id + 2);
 	int node2_id = atoi(node2->check_id + 2);
 
-	switch (node1->check_id[0]) {
-	case 'C':
-		if (node2->check_id[0] == 'C') {
-			COMPARE_IDS(node1_id, node2_id);
-		} else {
-			return -1;
-		}
-	case 'S':
-		if (node2->check_id[0] == 'C') {
-			return 1;
-		} else if (node2->check_id[0] == 'S') {
-			COMPARE_IDS(node1_id, node2_id);
-		} else {
-			return -1;
-		}
-	case 'W':
-		if (node2->check_id[0] == 'C' || node2->check_id[0] == 'S') {
-			return 1;
-		} else if (node2->check_id[0] == 'W') {
-			COMPARE_IDS(node1_id, node2_id);
-		} else {
-			return -1;
-		}
-	case 'E':
-		if (node2->check_id[0] == 'E') {
-			COMPARE_IDS(node1_id, node2_id);
-		} else {
-			return 1;
-		}
-	default:
-		return 0; //Should never happen, but no way to return an error
-	}
+	return (node1_id > node2_id) - (node1_id < node2_id);
 }
 
 void display_check_issue_counts(const struct checks *ck)

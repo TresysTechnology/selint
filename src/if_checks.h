@@ -20,6 +20,19 @@
 #include "check_hooks.h"
 
 /*********************************************
+* Check for unused interfaces and templates
+* Called on NODE_INTERFACE_DEF and NODE_TEMP_DEF nodes.
+* data - metadata about the file
+* node - the node to check
+* returns NULL if passed or check_result for issue X-001
+*********************************************/
+struct check_result *check_unused_interface(const struct
+                                            check_data *data,
+                                            const struct
+                                            policy_node
+                                            *node);
+
+/*********************************************
 * Check to make sure all interfaces and templates have a comment above them
 * Called on NODE_INTERFACE_DEF and NODE_TEMP_DEF nodes.
 * data - metadata about the file

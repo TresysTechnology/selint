@@ -122,6 +122,10 @@ test_parse_error_impl() {
 	fi
 }
 
+@test "X-001" {
+	test_one_check "X-001" "x01.*"
+}
+
 @test "C-001" {
 	test_ordering "simple"
 	test_ordering "interleaved"

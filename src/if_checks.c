@@ -25,6 +25,25 @@
 
 #define NOT_REQ_MESSAGE "%s %s is used in interface but not required"
 
+struct check_result *check_unused_interface(__attribute__((unused)) const struct
+                                            check_data *data,
+                                            const struct
+                                            policy_node *node)
+{
+	if (node->flavor != NODE_INTERFACE_DEF && node->flavor != NODE_TEMP_DEF) {
+		return alloc_internal_error(
+			"Unused interface check called on non interface definition entry");
+	}
+
+	const char *if_name = node->data.str;
+
+	if (is_used_if(if_name)) {
+		return NULL;
+	}
+
+	return make_check_result('X', X_ID_UNUSED_IF, "Interface %s is unused", if_name);
+}
+
 struct check_result *check_interface_definitions_have_comment(__attribute__((unused)) const struct
                                                               check_data *data,
                                                               const struct

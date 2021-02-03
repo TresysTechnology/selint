@@ -21,6 +21,11 @@
 #include "selint_error.h"
 #include "selint_config.h"
 
+enum extra_ids {
+	X_ID_UNUSED_IF = 1,
+	X_END
+};
+
 enum convention_ids {
 	C_ID_TE_ORDER       = 1,
 	C_ID_IF_COMMENT     = 4,

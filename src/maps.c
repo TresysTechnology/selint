@@ -30,6 +30,7 @@ static struct hash_elem *ifs_map = NULL;
 static struct bool_hash_elem *transform_map = NULL;
 static struct bool_hash_elem *filetrans_map = NULL;
 static struct bool_hash_elem *role_if_map = NULL;
+static struct bool_hash_elem *used_if_map = NULL;
 static struct sl_hash_elem *permmacros_map = NULL;
 static struct template_hash_elem *template_map = NULL;
 
@@ -421,6 +422,46 @@ int is_role_if(const char *if_name)
 	}
 }
 
+#if defined(__clang__) && defined(__clang_major__) && (__clang_major__ >= 4)
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#if (__clang_major__ >= 12)
+__attribute__((no_sanitize("unsigned-shift-base")))
+#endif
+#endif
+void mark_used_if(const char *if_name)
+{
+	struct bool_hash_elem *used_if;
+
+	HASH_FIND(hh_used_if, used_if_map, if_name, strlen(if_name), used_if);
+
+	if (!used_if) {
+		used_if = malloc(sizeof(struct bool_hash_elem));
+		used_if->key = strdup(if_name);
+		used_if->val = 1;
+		HASH_ADD_KEYPTR(hh_used_if, used_if_map, used_if->key,
+				strlen(used_if->key), used_if);
+	} else {
+		used_if->val = 1;
+	}
+}
+
+#if defined(__clang__) && defined(__clang_major__) && (__clang_major__ >= 4)
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#if (__clang_major__ >= 12)
+__attribute__((no_sanitize("unsigned-shift-base")))
+#endif
+#endif
+int is_used_if(const char *if_name)
+{
+	struct bool_hash_elem *used_if;
+	HASH_FIND(hh_used_if, used_if_map, if_name, strlen(if_name), used_if);
+	if (used_if && used_if->val == 1) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 static void insert_decl(struct template_hash_elem *template, void *new_node)
 {
 	if (template->declarations) {
@@ -657,6 +698,8 @@ void free_all_maps()
 	FREE_BOOL_MAP(filetrans);
 
 	FREE_BOOL_MAP(role_if);
+
+	FREE_BOOL_MAP(used_if);
 
 	struct sl_hash_elem *cur_sl, *tmp_sl;
 
