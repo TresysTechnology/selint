@@ -26,6 +26,7 @@ enum node_flavor {
 	NODE_FC_FILE,
 	NODE_SPT_FILE,
 	NODE_AV_FILE,
+	NODE_COND_FILE,
 	NODE_AV_RULE,
 	NODE_XAV_RULE,
 	NODE_TT_RULE,
@@ -195,6 +196,10 @@ struct gen_require_data {
 	unsigned char unquoted;
 };
 
+struct cond_declaration_data {
+	struct string_list *identifiers;
+};
+
 union node_data {
 	struct header_data *h_data;
 	struct av_rule_data *av_data;
@@ -208,6 +213,7 @@ union node_data {
 	struct fc_entry *fc_data;
 	struct attribute_data *at_data;
 	struct gen_require_data *gr_data;
+	struct cond_declaration_data *cd_data;
 	char *str;
 };
 
@@ -284,5 +290,7 @@ void free_sel_context(struct sel_context *to_free);
 void free_attribute_data(struct attribute_data *to_free);
 
 void free_gen_require_data(struct gen_require_data *to_free);
+
+void free_cond_declaration_data(struct cond_declaration_data *to_free);
 
 #endif

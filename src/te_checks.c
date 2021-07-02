@@ -170,6 +170,44 @@ struct check_result *check_no_self(__attribute__((unused)) const struct check_da
 
 }
 
+struct check_result *check_foreign_cond_id(const struct check_data
+                                           *data,
+                                           const struct policy_node
+                                           *node)
+{
+	if (node->flavor != NODE_BOOLEAN_POLICY && node->flavor != NODE_TUNABLE_POLICY) {
+		return alloc_internal_error("Invalid node type for `check_foreign_cond_id`");
+	}
+
+	const struct string_list *identifiers = node->data.cd_data->identifiers;
+
+	for (const struct string_list *ids = identifiers; ids; ids = ids->next) {
+		const char *id = ids->string;
+
+		const char *mod_name = look_up_in_decl_map(id, DECL_BOOL);
+
+		/* Ignore non-existent identifiers, covered by W-012 */
+		if (mod_name == NULL) {
+			continue;
+		}
+
+		if (0 == strcmp(mod_name, data->mod_name)) {
+			continue;
+		}
+
+		if (0 == strcmp(mod_name, "__global__")) {
+			continue;
+		}
+
+		return make_check_result('C', C_ID_FOREIGN_CONDID,
+		                         "Identifier %s in expression for conditional block not found in own module, but in module %s (candidate for global declaration or interface)",
+		                         id,
+		                         mod_name);
+        }
+
+	return NULL;
+}
+
 struct check_result *check_require_block(const struct check_data *data,
                                          const struct policy_node *node)
 {
@@ -661,6 +699,77 @@ struct check_result *check_unknown_interface_call(__attribute__((unused)) const 
 	return make_check_result('W', W_ID_UNKNOWN_CALL,
 				 "Call to %s can not be referenced to any interface",
 				 if_name);
+}
+
+static bool is_bare_parameter(const char *name)
+{
+	if (name[0] != '$' || name[1] == '\0') {
+		return false;
+	}
+
+	for (const char *c = name + 1; *c; c++) {
+		if (!isdigit((unsigned char)*c)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+static bool temp_has_bool_decl(const char *temp_name, const char *bool_name)
+{
+	if (temp_name == NULL) {
+		return false;
+	}
+
+	for (const struct decl_list *dl = look_up_decl_in_template_map(temp_name); dl; dl = dl->next) {
+		const struct declaration_data *decl = dl->decl;
+
+		if (decl->flavor != DECL_BOOL) {
+			continue;
+		}
+
+		if (0 == strcmp(decl->name, bool_name)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+struct check_result *check_unknown_cond_id(__attribute__((unused)) const struct check_data
+					   *data,
+					   const struct policy_node
+					   *node)
+{
+	if (node->flavor != NODE_BOOLEAN_POLICY && node->flavor != NODE_TUNABLE_POLICY) {
+		return alloc_internal_error("Invalid node type for `check_foreign_cond_id`");
+	}
+
+	const struct string_list *identifiers = node->data.cd_data->identifiers;
+
+	for (const struct string_list *ids = identifiers; ids; ids = ids->next) {
+		const char *id = ids->string;
+
+		/* Ignore interface parameters */
+		if (is_bare_parameter(id)) {
+			continue;
+		}
+
+		if (look_up_in_decl_map(id, DECL_BOOL) != NULL) {
+			continue;
+		}
+
+		if (temp_has_bool_decl(get_name_if_in_template(node), id)) {
+			continue;
+		}
+
+		return make_check_result('W', W_ID_UNKNOWN_COND_ID,
+					 "Expression for conditional block uses unknown identifier %s",
+					 id);
+	}
+
+	return NULL;
 }
 
 struct check_result *check_declaration_interface_nameclash(__attribute__((unused)) const struct check_data

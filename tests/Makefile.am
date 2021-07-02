@@ -131,6 +131,8 @@ FUNCTIONAL_TEST_FILES=functional/end-to-end.bats \
 			functional/policies/check_triggers/c06.warn.if \
 			functional/policies/check_triggers/c07.te \
 			functional/policies/check_triggers/c07.if \
+			functional/policies/check_triggers/c08.te \
+			functional/policies/check_triggers/c08_other.te \
 			functional/policies/check_triggers/e02.fc \
 			functional/policies/check_triggers/e03e04e05.fc \
 			functional/policies/check_triggers/e06.te \
@@ -180,6 +182,7 @@ FUNCTIONAL_TEST_FILES=functional/end-to-end.bats \
 			functional/policies/check_triggers/w10.warn.te \
 			functional/policies/check_triggers/w11.te \
 			functional/policies/check_triggers/w11.if \
+			functional/policies/check_triggers/w12.te \
 			functional/policies/check_triggers/C-001/interleaved.expect.ref \
 			functional/policies/check_triggers/C-001/interleaved.expect.lax \
 			functional/policies/check_triggers/C-001/interleaved.te \

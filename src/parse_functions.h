@@ -358,6 +358,17 @@ enum selint_error end_m4_argument(struct policy_node **cur);
 enum selint_error save_command(struct policy_node *cur, const char *comm);
 
 /**********************************
+* save_identifier
+* Save an identifier name in the tree.
+* cur (in) - The current spot in the tree.  Will be modified with information
+* about the identifier
+* comm (in, sink) - The name of the identifier
+*
+* Returns - SELint error code
+**********************************/
+enum selint_error save_identifier(struct policy_node *cur, char *identifier);
+
+/**********************************
 * insert_type_attribute
 * Insert a type_attribute node into the tree
 * cur (in, out) - The current spot in the tree.  Will be updated to point to the

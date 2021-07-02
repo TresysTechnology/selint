@@ -217,6 +217,10 @@ selinux_file:
 	|
 	comments av_file
 	|
+	global_conditions_file
+	|
+	comments global_conditions_file
+	|
 	comments
 	;
 
@@ -686,7 +690,7 @@ m4_string_elem:
 	;
 
 condition:
-	STRING { free($1); }
+	STRING { save_identifier(cur->parent, $1); }
 	|
 	NOT condition
 	|
@@ -1069,6 +1073,34 @@ av_permission:
 	STRING { insert_into_decl_map($1, "__av_file__", DECL_PERM); free($1); }
 	|
 	COMMENT
+	;
+
+// policy/global_booleans and policy/global_tunables files
+
+global_conditions_file: // must not allow a comment to be first -> parser conflict
+	gcf_definition gcf_contents
+	|
+	gcf_definition
+	;
+
+gcf_contents:
+	gcf_contents gcf_content
+	|
+	gcf_content
+	;
+
+gcf_content:
+	gcf_definition
+	|
+	COMMENT
+	;
+
+gcf_definition:
+	bool_declaration {
+		if (expected_node_flavor != NODE_COND_FILE) {
+				const struct location loc = { @1.first_line, @1.first_column, @1.last_line, @1.last_column };
+				yyerror(&loc, NULL, "Error: Unexpected global conditionals file parsed"); YYERROR;
+		} }
 	;
 
 %%

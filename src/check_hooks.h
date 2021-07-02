@@ -27,6 +27,7 @@ enum convention_ids {
 	C_ID_UNORDERED_PERM = 5,
 	C_ID_UNORDERED_REQ  = 6,
 	C_ID_SELF           = 7,
+	C_ID_FOREIGN_CONDID = 8,
 	C_END
 };
 
@@ -56,6 +57,7 @@ enum warn_ids {
 	W_ID_MOD_NAME_FILE     = 9,
 	W_ID_UNKNOWN_CALL      = 10,
 	W_ID_IF_DECL_NOT_OWN   = 11,
+	W_ID_UNKNOWN_COND_ID   = 12,
 	W_END
 };
 

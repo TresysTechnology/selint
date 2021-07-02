@@ -1,0 +1,5 @@
+policy_module(c08, 1.0)
+
+type foo_t;
+
+bool c08_cond;
