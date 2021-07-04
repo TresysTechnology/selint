@@ -1,0 +1,13 @@
+policy_module(c08_other, 1.0)
+
+type bar_t;
+
+bool c08_other_cond;
+
+if (c08_other_cond) {
+	allow bar_t self:process fork;
+}
+
+if (c08_cond) {
+	allow bar_t self:process fork;
+}

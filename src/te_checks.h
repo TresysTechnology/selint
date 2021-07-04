@@ -59,6 +59,18 @@ struct check_result *check_no_self(const struct check_data *data,
                                    const struct policy_node *node);
 
 /*********************************************
+ * Check for identifiers in conditional expressions not declared in own module.
+ * Called on NODE_BOOLEAN_POLICY and NODE_TUNABLE_POLICY nodes.
+ * data - metadata about the file currently being scanned
+ * node - the node to check
+ * returns NULL if passed or check_result for issue C-008
+*********************************************/
+struct check_result *check_foreign_cond_id(const struct check_data
+                                           *data,
+                                           const struct policy_node
+                                           *node);
+
+/*********************************************
 * Check for the presence of require blocks in TE files.
 * Interface calls are to be preferred.
 * Called on NODE_REQUIRE and NODE_GEN_REQ nodes.
@@ -195,6 +207,18 @@ struct check_result *check_unknown_interface_call(const struct check_data
                                                   *data,
                                                   const struct policy_node
                                                   *node);
+
+/*********************************************
+ * Check for unknown identifiers in conditional expressions.
+ * Called on NODE_BOOLEAN_POLICY and NODE_TUNABLE_POLICY nodes.
+ * data - metadata about the file currently being scanned
+ * node - the node to check
+ * returns NULL if passed or check_result for issue W-012
+*********************************************/
+struct check_result *check_unknown_cond_id(const struct check_data
+                                           *data,
+                                           const struct policy_node
+                                           *node);
 
 /*********************************************
  * Check for clash of declaration and interface names.

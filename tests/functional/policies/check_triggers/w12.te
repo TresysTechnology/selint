@@ -1,0 +1,13 @@
+policy_module(w12, 1.0)
+
+type bar_t;
+
+bool w12_cond;
+
+if (w12_cond) {
+	allow bar_t self:process fork;
+}
+
+if (w12_cond && foo) {
+	allow bar_t self:process fork;
+}

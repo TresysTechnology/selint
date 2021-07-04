@@ -157,6 +157,7 @@ CHECK IDS
 	C-005: Permissions in av rule or class declaration not ordered
 	C-006: Declarations in require block not ordered
 	C-007: Redudant type specification instead of self keyword
+	C-008: Conditional expression identifier from foreign module
 
 	S-001: Require block used instead of interface call
 	S-002: File context file labels with type not declared in module
@@ -180,6 +181,7 @@ CHECK IDS
 	W-009: Module name does not match file name
 	W-010: Call to unknown interface
 	W-011: Declaration in require block not defined in own module
+	W-012: Conditional expression contains unknown identifier
 
 	E-002: Bad file context format
 	E-003: Nonexistent user listed in fc file

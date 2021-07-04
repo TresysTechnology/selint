@@ -247,6 +247,41 @@ IGNORE_CONST_DISCARD_END;
 	return SELINT_SUCCESS;
 }
 
+static enum selint_error load_global_conditions_file(const char *path)
+{
+	print_if_verbose("Parsing global conditions file %s\n", path);
+
+	set_current_module_name("__global__");
+
+	FILE *f = fopen(path, "r");
+	if (!f) {
+		printf("%sError%s: Failed to open file %s: %s\n", color_error(), color_reset(), path, strerror(errno));
+		return SELINT_IO_ERROR;
+	}
+
+	struct policy_node *ast = yyparse_wrapper(f, path, NODE_COND_FILE);
+	fclose(f);
+
+	if (!ast) {
+		return SELINT_PARSE_ERROR;
+	}
+
+	free_policy_node(ast);
+	return SELINT_SUCCESS;
+}
+
+enum selint_error load_global_conditions(const struct string_list *paths)
+{
+	for (const struct string_list *p = paths; p; p = p->next) {
+		enum selint_error rc = load_global_conditions_file(p->string);
+		if (rc != SELINT_SUCCESS) {
+			return rc;
+		}
+	}
+
+	return SELINT_SUCCESS;
+}
+
 enum selint_error mark_transform_interfaces(const struct policy_file_list *files)
 {
 	const struct policy_file_node *cur;

@@ -401,6 +401,7 @@ int main(int argc, char **argv)
 	char *modules_conf_path = NULL;
 	char *obj_perm_sets_path = NULL;
 	char *access_vector_path = NULL;
+	struct string_list *global_cond_files = NULL;
 
 	while (file) {
 		const char *suffix = (file->fts_pathlen > 3) ? (file->fts_path + file->fts_pathlen - 3) : NULL;
@@ -433,6 +434,10 @@ int main(int argc, char **argv)
 		           && !strcmp(file->fts_name, "access_vectors")) {
 			// TODO: Make access_vectors name configurable
 			access_vector_path = strdup(file->fts_path);
+		} else if (source_flag
+		           && (!strcmp(file->fts_name, "global_booleans") || !strcmp(file->fts_name, "global_tunables"))) {
+			// TODO: Make names configurable
+			global_cond_files = concat_string_lists(global_cond_files, sl_from_str(file->fts_path));
 		} else {
 			// Directories might get traversed twice: preorder and final visit.
 			// Print only the final visit
@@ -500,6 +505,10 @@ int main(int argc, char **argv)
                                    && !access_vector_path
                                    && 0 == strcmp(file->fts_name, "access_vectors")) {
 				access_vector_path = strdup(file->fts_path);
+			} else if (source_flag
+			           && !str_in_sl(file->fts_path, global_cond_files)
+			           && (0 == strcmp(file->fts_name, "global_booleans") || 0 == strcmp(file->fts_name, "global_tunables"))) {
+				global_cond_files = concat_string_lists(global_cond_files, sl_from_str(file->fts_path));
 			}
 			file = fts_read(ftsp);
 		}
@@ -550,6 +559,17 @@ int main(int argc, char **argv)
 			printf("%sWarning%s: Failed to locate obj_perm_sets.spt file.\n", color_warning(), color_reset());
 		}
 
+		if (global_cond_files) {
+			enum selint_error res = load_global_conditions(global_cond_files);
+			if (res != SELINT_SUCCESS) {
+				printf("%sWarning%s: Failed to parse global conditions: %d\n", color_warning(), color_reset(), res);
+			} else {
+				print_if_verbose("Loaded global conditions\n");
+			}
+		} else {
+			printf("%sWarning%s: Failed to locate global conditions files.\n", color_warning(), color_reset());
+		}
+
 	} else {
 		enum selint_error r = load_access_vectors_kernel("/sys/fs/selinux/class");
 		if (r != SELINT_SUCCESS) {
@@ -587,12 +607,14 @@ int main(int argc, char **argv)
 		free(obj_perm_sets_path);
 		free(access_vector_path);
 		free(modules_conf_path);
+		free_string_list(global_cond_files);
 		return EX_CONFIG;
 	}
 
 	free(obj_perm_sets_path);
 	free(access_vector_path);
 	free(modules_conf_path);
+	free_string_list(global_cond_files);
 
 	enum selint_error res = run_analysis(ck, te_files, if_files, fc_files, context_te_files, context_if_files, custom_fc_macros, &ccd);
 	switch (res) {

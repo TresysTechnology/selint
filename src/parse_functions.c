@@ -609,8 +609,12 @@ enum selint_error end_optional_else(struct policy_node **cur)
 enum selint_error begin_boolean_policy(struct policy_node **cur,
                                        unsigned int lineno)
 {
+	struct cond_declaration_data *cd_data = malloc(sizeof(struct cond_declaration_data));
+	cd_data->identifiers = NULL;;
+
 	union node_data nd;
-	nd.str = NULL;
+	nd.cd_data = cd_data;
+
 	return begin_block(cur, NODE_BOOLEAN_POLICY, nd, lineno);
 }
 
@@ -623,8 +627,12 @@ enum selint_error end_boolean_policy(struct policy_node **cur)
 enum selint_error begin_tunable_policy(struct policy_node **cur,
                                        unsigned int lineno)
 {
+	struct cond_declaration_data *cd_data = malloc(sizeof(struct cond_declaration_data));
+	cd_data->identifiers = NULL;;
+
 	union node_data nd;
-	nd.str = NULL;
+	nd.cd_data = cd_data;
+
 	return begin_block(cur, NODE_TUNABLE_POLICY, nd, lineno);
 }
 
@@ -752,6 +760,23 @@ enum selint_error save_command(struct policy_node *cur, const char *comm)
 	} else {
 		return SELINT_PARSE_ERROR;
 	}
+
+	return SELINT_SUCCESS;
+}
+
+enum selint_error save_identifier(struct policy_node *cur, char *identifier)
+{
+	if (cur == NULL || identifier == NULL) {
+		free(identifier);
+		return SELINT_BAD_ARG;
+	}
+
+	if (cur->flavor != NODE_TUNABLE_POLICY && cur->flavor != NODE_BOOLEAN_POLICY) {
+		free(identifier);
+		return SELINT_BAD_ARG;
+	}
+
+	cur->data.cd_data->identifiers = concat_string_lists(cur->data.cd_data->identifiers, sl_from_str_consume(identifier));
 
 	return SELINT_SUCCESS;
 }

@@ -261,6 +261,7 @@ struct string_list *get_names_in_node(const struct policy_node *node)
 	   NODE_FC_FILE,
 	   NODE_SPT_FILE,
 	   NODE_AV_FILE,
+	   NODE_COND_FILE,
 	   NODE_HEADER,
 	   NODE_M4_CALL,
 	   NODE_M4_SIMPLE_MACRO,
@@ -398,6 +399,10 @@ enum selint_error free_policy_node(struct policy_node *to_free)
 		break;
 	case NODE_GEN_REQ:
 		free_gen_require_data(to_free->data.gr_data);
+		break;
+	case NODE_BOOLEAN_POLICY:
+	case NODE_TUNABLE_POLICY:
+		free_cond_declaration_data(to_free->data.cd_data);
 		break;
 	default:
 		if (to_free->data.str != NULL) {
@@ -629,5 +634,11 @@ void free_attribute_data(struct attribute_data *to_free)
 
 void free_gen_require_data(struct gen_require_data *to_free)
 {
+	free(to_free);
+}
+
+void free_cond_declaration_data(struct cond_declaration_data *to_free)
+{
+	free_string_list(to_free->identifiers);
 	free(to_free);
 }

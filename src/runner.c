@@ -146,6 +146,12 @@ struct checks *register_checks(char level,
 			add_check(NODE_XAV_RULE, ck, "C-007",
 			          check_no_self);
 		}
+		if (CHECK_ENABLED("C-008")) {
+			add_check(NODE_BOOLEAN_POLICY, ck, "C-008",
+			          check_foreign_cond_id);
+			add_check(NODE_TUNABLE_POLICY, ck, "C-008",
+			          check_foreign_cond_id);
+		}
 		// FALLTHRU
 	case 'S':
 		if (CHECK_ENABLED("S-001")) {
@@ -254,6 +260,12 @@ struct checks *register_checks(char level,
 		if (CHECK_ENABLED("W-011")) {
 			add_check(NODE_DECL, ck, "W-011",
 				  check_required_declaration_own);
+		}
+		if (CHECK_ENABLED("W-012")) {
+			add_check(NODE_BOOLEAN_POLICY, ck, "W-012",
+				  check_unknown_cond_id);
+			add_check(NODE_TUNABLE_POLICY, ck, "W-012",
+				  check_unknown_cond_id);
 		}
 		// FALLTHRU
 	case 'E':
