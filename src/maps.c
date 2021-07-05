@@ -36,10 +36,7 @@ static struct hash_elem *class_map = NULL;
 static struct hash_elem *perm_map = NULL;
 static struct hash_elem *mods_map = NULL;
 static struct hash_elem *mod_layers_map = NULL;
-static struct hash_elem *ifs_map = NULL;
-static struct bool_hash_elem *transform_map = NULL;
-static struct bool_hash_elem *filetrans_map = NULL;
-static struct bool_hash_elem *role_if_map = NULL;
+static struct if_hash_elem *interfaces_map = NULL;
 static struct sl_hash_elem *permmacros_map = NULL;
 static struct template_hash_elem *template_map = NULL;
 
@@ -219,16 +216,20 @@ no_sanitize_unsigned_integer_
 void insert_into_ifs_map(const char *if_name, const char *mod_name)
 {
 
-	struct hash_elem *if_call;
+	struct if_hash_elem *if_call;
 
-	HASH_FIND(hh_ifs, ifs_map, if_name, strlen(if_name), if_call);
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), if_call);
 
 	if (!if_call) {
-		if_call = malloc(sizeof(struct hash_elem));
-		if_call->key = strdup(if_name);
-		if_call->val = strdup(mod_name);
-		HASH_ADD_KEYPTR(hh_ifs, ifs_map, if_call->key,
-		                strlen(if_call->key), if_call);
+		if_call = malloc(sizeof(struct if_hash_elem));
+		if_call->name = strdup(if_name);
+		if_call->module = strdup(mod_name);
+		if_call->flags = 0;
+		HASH_ADD_KEYPTR(hh_interfaces, interfaces_map, if_call->name,
+				strlen(if_call->name), if_call);
+	} else {
+		free(if_call->module);
+		if_call->module = strdup(mod_name);
 	}
 }
 
@@ -236,14 +237,14 @@ no_sanitize_unsigned_integer_
 const char *look_up_in_ifs_map(const char *if_name)
 {
 
-	struct hash_elem *if_call;
+	struct if_hash_elem *if_call;
 
-	HASH_FIND(hh_ifs, ifs_map, if_name, strlen(if_name), if_call);
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), if_call);
 
 	if (if_call == NULL) {
 		return NULL;
 	} else {
-		return if_call->val;
+		return if_call->module;
 	}
 }
 
@@ -274,27 +275,28 @@ unsigned int decl_map_count(enum decl_flavor flavor)
 no_sanitize_unsigned_integer_
 void mark_transform_if(const char *if_name)
 {
-	struct bool_hash_elem *transform_if;
+	struct if_hash_elem *transform_if;
 
-	HASH_FIND(hh_transform, transform_map, if_name, strlen(if_name), transform_if);
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), transform_if);
 
 	if (!transform_if) {
-		transform_if = malloc(sizeof(struct bool_hash_elem));
-		transform_if->key = strdup(if_name);
-		transform_if->val = 1;
-		HASH_ADD_KEYPTR(hh_transform, transform_map, transform_if->key,
-		                strlen(transform_if->key), transform_if);
+		transform_if = malloc(sizeof(struct if_hash_elem));
+		transform_if->name = strdup(if_name);
+		transform_if->module = NULL;
+		transform_if->flags = TRANSFORM_IF;
+		HASH_ADD_KEYPTR(hh_interfaces, interfaces_map, transform_if->name,
+				strlen(transform_if->name), transform_if);
 	} else {
-		transform_if->val = 1;
+		transform_if->flags |= TRANSFORM_IF;
 	}
 }
 
 no_sanitize_unsigned_integer_
 int is_transform_if(const char *if_name)
 {
-	struct bool_hash_elem *transform_if;
-	HASH_FIND(hh_transform, transform_map, if_name, strlen(if_name), transform_if);
-	if (transform_if && transform_if->val == 1) {
+	struct if_hash_elem *transform_if;
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), transform_if);
+	if (transform_if && (transform_if->flags & TRANSFORM_IF)) {
 		return 1;
 	} else {
 		return 0;
@@ -304,27 +306,28 @@ int is_transform_if(const char *if_name)
 no_sanitize_unsigned_integer_
 void mark_filetrans_if(const char *if_name)
 {
-	struct bool_hash_elem *filetrans_if;
+	struct if_hash_elem *filetrans_if;
 
-	HASH_FIND(hh_filetrans, filetrans_map, if_name, strlen(if_name), filetrans_if);
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), filetrans_if);
 
 	if (!filetrans_if) {
-		filetrans_if = malloc(sizeof(struct bool_hash_elem));
-		filetrans_if->key = strdup(if_name);
-		filetrans_if->val = 1;
-		HASH_ADD_KEYPTR(hh_filetrans, filetrans_map, filetrans_if->key,
-		                strlen(filetrans_if->key), filetrans_if);
+		filetrans_if = malloc(sizeof(struct if_hash_elem));
+		filetrans_if->name = strdup(if_name);
+		filetrans_if->module = NULL;
+		filetrans_if->flags = FILETRANS_IF;
+		HASH_ADD_KEYPTR(hh_interfaces, interfaces_map, filetrans_if->name,
+				strlen(filetrans_if->name), filetrans_if);
 	} else {
-		filetrans_if->val = 1;
+		filetrans_if->flags |= FILETRANS_IF;
 	}
 }
 
 no_sanitize_unsigned_integer_
 int is_filetrans_if(const char *if_name)
 {
-	struct bool_hash_elem *filetrans_if;
-	HASH_FIND(hh_filetrans, filetrans_map, if_name, strlen(if_name), filetrans_if);
-	if (filetrans_if && filetrans_if->val == 1) {
+	struct if_hash_elem *filetrans_if;
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), filetrans_if);
+	if (filetrans_if && (filetrans_if->flags & FILETRANS_IF)) {
 		return 1;
 	} else {
 		return 0;
@@ -334,27 +337,69 @@ int is_filetrans_if(const char *if_name)
 no_sanitize_unsigned_integer_
 void mark_role_if(const char *if_name)
 {
-	struct bool_hash_elem *role_if;
+	struct if_hash_elem *role_if;
 
-	HASH_FIND(hh_role_if, role_if_map, if_name, strlen(if_name), role_if);
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), role_if);
 
 	if (!role_if) {
-		role_if = malloc(sizeof(struct bool_hash_elem));
-		role_if->key = strdup(if_name);
-		role_if->val = 1;
-		HASH_ADD_KEYPTR(hh_role_if, role_if_map, role_if->key,
-		                strlen(role_if->key), role_if);
+		role_if = malloc(sizeof(struct if_hash_elem));
+		role_if->name = strdup(if_name);
+		role_if->module = NULL;
+		role_if->flags = ROLE_IF;
+		HASH_ADD_KEYPTR(hh_interfaces, interfaces_map, role_if->name,
+				strlen(role_if->name), role_if);
 	} else {
-		role_if->val = 1;
+		role_if->flags |= ROLE_IF;
 	}
 }
 
 no_sanitize_unsigned_integer_
 int is_role_if(const char *if_name)
 {
-	struct bool_hash_elem *role_if;
-	HASH_FIND(hh_role_if, role_if_map, if_name, strlen(if_name), role_if);
-	if (role_if && role_if->val == 1) {
+	struct if_hash_elem *role_if;
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), role_if);
+	if (role_if && (role_if->flags & ROLE_IF)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+#if defined(__clang__) && defined(__clang_major__) && (__clang_major__ >= 4)
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#if (__clang_major__ >= 12)
+__attribute__((no_sanitize("unsigned-shift-base")))
+#endif
+#endif
+void mark_used_if(const char *if_name)
+{
+	struct if_hash_elem *used_if;
+
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), used_if);
+
+	if (!used_if) {
+		used_if = malloc(sizeof(struct if_hash_elem));
+		used_if->name = strdup(if_name);
+		used_if->module = NULL;
+		used_if->flags = USED_IF;
+		HASH_ADD_KEYPTR(hh_interfaces, interfaces_map, used_if->name,
+				strlen(used_if->name), used_if);
+	} else {
+		used_if->flags |= USED_IF;
+	}
+}
+
+#if defined(__clang__) && defined(__clang_major__) && (__clang_major__ >= 4)
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#if (__clang_major__ >= 12)
+__attribute__((no_sanitize("unsigned-shift-base")))
+#endif
+#endif
+int is_used_if(const char *if_name)
+{
+	struct if_hash_elem *used_if;
+	HASH_FIND(hh_interfaces, interfaces_map, if_name, strlen(if_name), used_if);
+	if (used_if && (used_if->flags & USED_IF)) {
 		return 1;
 	} else {
 		return 0;
@@ -537,10 +582,11 @@ unsigned int permmacros_map_count()
 		free(cur_decl); \
 } \
 
-#define FREE_BOOL_MAP(mn) HASH_ITER(hh_ ## mn, mn ## _map, cur_bool, tmp_bool) { \
-		HASH_DELETE(hh_ ## mn, mn ## _map, cur_bool); \
-		free(cur_bool->key); \
-		free(cur_bool); \
+#define FREE_IF_MAP(mn) HASH_ITER(hh_ ## mn, mn ## _map, cur_if, tmp_if) { \
+		HASH_DELETE(hh_ ## mn, mn ## _map, cur_if); \
+		free(cur_if->name); \
+		free(cur_if->module); \
+		free(cur_if); \
 } \
 
 void free_all_maps()
@@ -568,15 +614,9 @@ void free_all_maps()
 
 	FREE_MAP(mod_layers);
 
-	FREE_MAP(ifs);
+	struct if_hash_elem *cur_if, *tmp_if;
 
-	struct bool_hash_elem *cur_bool, *tmp_bool;
-
-	FREE_BOOL_MAP(transform);
-
-	FREE_BOOL_MAP(filetrans);
-
-	FREE_BOOL_MAP(role_if);
+	FREE_IF_MAP(interfaces);
 
 	struct sl_hash_elem *cur_sl, *tmp_sl;
 

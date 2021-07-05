@@ -61,7 +61,7 @@ int is_check_enabled(const char *check_name,
                      int only_enabled)
 {
 
-	int is_enabled = 1;     // default to enabled
+	int is_enabled = check_name[0] == 'X' ? 0 : 1;     // default to enabled, except for extra checks
 
 	if (only_enabled) {
 		// if only_enabled is true, we only want to enable checks that are
@@ -101,6 +101,13 @@ struct checks *register_checks(char level,
 	struct checks *ck = malloc(sizeof(struct checks));
 
 	memset(ck, 0, sizeof(struct checks));
+
+	if (CHECK_ENABLED("X-001")) {
+		add_check(NODE_INTERFACE_DEF, ck, "X-001",
+			  check_unused_interface);
+		add_check(NODE_TEMP_DEF, ck, "X-001",
+			  check_unused_interface);
+	}
 
 	switch (level) {
 	case 'C':

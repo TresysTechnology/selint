@@ -456,6 +456,8 @@ enum selint_error insert_interface_call(struct policy_node **cur, const char *if
 		mark_filetrans_if((*cur)->parent->data.str);
 	}
 
+	mark_used_if(if_name);
+
 	union node_data nd;
 	nd.ic_data = if_data;
 	enum selint_error ret = insert_policy_node_next(*cur,

@@ -26,19 +26,25 @@ struct hash_elem {
 	char *key;
 	char *val;
 	UT_hash_handle hh_type, hh_role, hh_user, hh_attr_type, hh_attr_role, hh_bool,
-	               hh_class, hh_perm, hh_mods, hh_ifs, hh_mod_layers;
-};
-
-struct bool_hash_elem {
-	char *key;
-	int val;
-	UT_hash_handle hh_transform, hh_filetrans, hh_role_if;
+	               hh_class, hh_perm, hh_mods, hh_mod_layers;
 };
 
 struct sl_hash_elem {
 	char *key;
 	struct string_list *val;
 	UT_hash_handle hh_permmacros;
+};
+
+#define TRANSFORM_IF (1u << 0)
+#define FILETRANS_IF (1u << 1)
+#define ROLE_IF      (1u << 2)
+#define USED_IF      (1u << 3)
+
+struct if_hash_elem {
+	char *name;
+	char *module;
+	uint8_t flags;
+	UT_hash_handle hh_interfaces;
 };
 
 struct template_hash_elem {
@@ -76,6 +82,10 @@ int is_filetrans_if(const char *if_name);
 void mark_role_if(const char *if_name);
 
 int is_role_if(const char *if_name);
+
+void mark_used_if(const char *if_name);
+
+int is_used_if(const char *if_name);
 
 // Just generate a template entry in the map, but don't save any calls
 // or decls to it.  This is helpful to know what is a template for certain

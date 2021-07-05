@@ -170,7 +170,7 @@ START_TEST (test_is_valid_check) {
 	ck_assert_int_eq(1, is_valid_check("S-001"));
 	ck_assert_int_eq(1, is_valid_check("E-001"));
 	ck_assert_int_eq(1, is_valid_check("F-001"));
-	ck_assert_int_eq(0, is_valid_check("X-001"));
+	ck_assert_int_eq(0, is_valid_check("Y-001"));
 	ck_assert_int_eq(0, is_valid_check("C-101"));
 }
 END_TEST
